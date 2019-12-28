@@ -1,0 +1,53 @@
+{% extends 'off/home.html' %}
+{% block css %}
+    <!-- Latest compiled and minified CSS -->
+
+    <style type="text/css">
+
+          .space { margin-top: 100px;}
+
+          @media (min-width: 992px) {
+            #mainNav { background-color: white; }
+            #mainNav .navbar-nav .nav-item .nav-link {
+                color: black; }
+            #mainNav .navbar-nav .nav-item .nav-link:hover {
+                color: black;
+            }
+          }
+    </style>
+{% endblock %}
+
+{% block header %}
+    <header class="page-section bg-primary " id="about">
+            <div class="container">
+              <div class="row justify-content-center space">
+                <div class="col-lg-8 text-center">
+                    <h2>Mentions Légales</h2>
+                    <p>Site réalisé dans le cadre du projet n°8 d'Openclassrooms</p>
+                    <p>Parcours développeur d'application Python</p>
+                </div>
+              </div>
+                <div class="row mt-3">
+                    <div class="col-sm-8 col-md-4 text-center">
+                        <h3>Hébergement</h3>
+                        <p>Le site est heberge par <a href="https://www.heroku.com">Heroku</a> dans sa version gratuite.</p>
+                    </div>
+                    <div class="col-sm-8 col-md-4 text-center">
+                        <h3>Ressources utilisées</h3>
+                        <p>Template utilisé : <a href="https://github.com/BlackrockDigital/startbootstrap-creative">Start Bootstrap - Creative</a></p>
+                        <p>Photo page d'accueil réalisée par <a href="https://unsplash.com/@kawin"></a>Kawin Harasai</p>
+                        <p>Les icônes sont mises à disposition gratuitement par <a href="https://icomoon.io">IconMonn</a></p>
+                        <p>La charte graphique fournie pour ce projet est disponible <a href="https://company-82435.frontify.com/d/6Yy9WFJdtp8j/pur-beurre-style-guide">Ici</a> </p>
+                    </div>
+                    <div class="col-sm-8 col-md-4 text-center">
+                        <h3>Code source</h3>
+                        <p>Le code source de ce site est disponible sur GitHub sur ce <a href="https://github.com/Tepau/pur_beurre">repository</a>.</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+{% endblock %}
+
+{% block content %}
+
+{% endblock %}
