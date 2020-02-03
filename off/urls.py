@@ -12,4 +12,5 @@ urlpatterns = [
     url(r'^produit/(?P<product_id>[0-9]+)/$', views.detail, name='detail'),
     url(r'^mesproduits/$', views.my_products, name='my_products'),
     url(r'^mentions/$', views.mentions, name='mentions'),
+    url(r'^ajax_calls/myFunction/', views.autocompleteModel, name='test'),
 ]

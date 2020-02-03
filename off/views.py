@@ -1,12 +1,16 @@
+import json
+
 import requests
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from .forms import OffForm, LoginForm, RegistrationForm
+from .forms import OffForm, LoginForm, RegistrationForm, OffForm2
 from .models import Category, Product
 from .constants import *
+
 
 
 def home(request):
@@ -14,6 +18,7 @@ def home(request):
      use the openfoodfact API to find it and save it in the database """
     if request.method == 'POST':
         form = OffForm(request.POST)
+        form2 = OffForm2(request.POST)
         if form.is_valid():
             search_terms = form.cleaned_data['nom']
             mini_search_terms = search_terms.lower()
@@ -60,7 +65,8 @@ def home(request):
                             selected_products.append(key)
                     if len(selected_products) > 0:
                         product_to_insert = selected_products[0]
-                        element = Product.objects.create(name=product_to_insert[1].lower(), nutriscore=product_to_insert[0],
+                        element = Product.objects.create(name=product_to_insert[1].lower(),
+                                                         nutriscore=product_to_insert[0],
                                                          url_image=product_to_insert[3],
                                                          url_link=product_to_insert[4])
 
@@ -70,15 +76,73 @@ def home(request):
 
             return redirect('off:article', search=search_terms)
 
+        if form2.is_valid():
+            search_terms = form2.cleaned_data['noms']
+            mini_search_terms = search_terms.lower()
+            first_maj_search_terms = search_terms.capitalize()
+            if len(Product.objects.filter(name=mini_search_terms)) == 0:
+                all_products = []
+                for category in CATEGORIES_LIST:
+                    api = 'https://fr.openfoodfacts.org/cgi/search.pl'
+                    config = {
+                        'action': 'process',
+                        'search_terms': first_maj_search_terms,
+                        'tagtype_0': 'categories',
+                        'tag_contains_0': 'contains',
+                        'tag_0': category,
+                        'page_size': 1,
+                        'json': 1
+                    }
+                    response = requests.get(api, params=config)
+                    results = response.json()
+                    recovered_product = results['products']
+                    all_products.extend(recovered_product)
+
+                good_product = []
+                for product in all_products:
+                    if 'product_name_fr' in product:
+                        if product['product_name_fr'] == first_maj_search_terms and len(
+                                clean_cat(product['categories'].split(","), CATEGORIES_LIST)) > 0:
+                            good_product.append(product)
+                selected_products = []
+
+                if len(good_product) > 0:
+                    if len(good_product) > 1:
+                        good_product = [good_product[0]]
+
+                    for product in good_product:
+                        if valid_product(KEYS, product):
+                            cat = clean_cat(product['categories'].split(","), CATEGORIES_LIST)
+                            nutriscore = product['nutrition_grade_fr']
+                            name = product['product_name_fr'].lower()
+                            url_picture = product['image_url']
+                            url_link = product['url']
+
+                            key = [nutriscore, name, cat, url_picture, url_link]
+                            selected_products.append(key)
+                    if len(selected_products) > 0:
+                        product_to_insert = selected_products[0]
+                        element = Product.objects.create(name=product_to_insert[1].lower(),
+                                                         nutriscore=product_to_insert[0],
+                                                         url_image=product_to_insert[3],
+                                                         url_link=product_to_insert[4])
+
+                        for cat in product_to_insert[2]:
+                            element.category.add(Category.objects.get(name=cat))
+                            element.save()
+
+            return redirect('off:article', search=search_terms)
     else:
         form = OffForm()
+        form2 = OffForm2()
     return render(request, 'off/home.html', locals())
+
 
 # Access information account
 @login_required(login_url='off:registration')  # redirect when user is not logged in
 def account(request):
     user = User.objects.get(id=request.user.id)
-    form = OffForm()
+    form2 = OffForm2()
     return render(request, 'off/account.html', locals())
 
 
@@ -87,7 +151,7 @@ def my_products(request):
     # Access to saved products
     user = User.objects.get(id=request.user.id)
     products = user.product_set.all().order_by('nutriscore')
-    form = OffForm()
+    form2 = OffForm2()
     paginate = True
     paginator = Paginator(products, 9)
     page = request.GET.get('page')
@@ -109,7 +173,8 @@ def article(request, search):
     nutriscore_researched_product = researched_product.nutriscore
     categories = Category.objects.filter(product__name=search).values_list('id', flat=True)
     products = Product.objects.filter(category__id__in=categories).filter(
-        nutriscore__lt=nutriscore_researched_product).distinct().exclude(name=researched_product.name).order_by('nutriscore')
+        nutriscore__lt=nutriscore_researched_product).distinct().exclude(name=researched_product.name).order_by(
+        'nutriscore')
 
     paginate = True
     paginator = Paginator(products, 9)
@@ -123,7 +188,7 @@ def article(request, search):
         # If page is out of range (e.g. 9999), deliver last page of results.
         products = paginator.page(paginator.num_pages)
 
-    form = OffForm()
+    form2 = OffForm2()
 
     # Product backup
     if request.method == 'POST':
@@ -145,7 +210,7 @@ def login_registration(request):
     """ Display two forms, the first to register, the second to connect """
     login_error = False
     registration_error = False
-    form = OffForm()
+    form2 = OffForm2()
     if request.method == 'POST':
         login_form = LoginForm(request.POST)
 
@@ -190,7 +255,7 @@ def log_out(request):
 def detail(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     product_nutriscore = product.nutriscore
-    form = OffForm()
+    form2 = OffForm2()
     nutriscores = ['a', 'b', 'c', 'd', 'e']
     return render(request, 'off/detail.html', locals())
 
@@ -225,3 +290,23 @@ def clean_cat(list_categories_product, list_categories):
         if category in list_categories:
             final_list.append(category)
     return final_list
+
+
+def autocompleteModel(request):
+    if request.is_ajax():
+        q = request.GET.get('term', '')
+        print(q)
+        print('requests', request)
+        search_qs = Product.objects.filter(name__startswith=q)
+        results = []
+        for r in search_qs:
+            results.append(r.name)
+        print('result', results)
+        data = json.dumps(results)
+        print('data', data)
+    else:
+        data = 'fail'
+    mimetype = 'application/json'
+    return HttpResponse(data, mimetype)
+
+
