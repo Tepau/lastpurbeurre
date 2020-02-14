@@ -292,16 +292,5 @@ def clean_cat(list_categories_product, list_categories):
             final_list.append(category)
     return final_list
 
-def autocompleteModel(request):
-    if request.is_ajax():
-        q = request.GET.get('term', '').lower()
-        search_qs = Product.objects.filter(name__startswith=q)
-        results = []
-        for r in search_qs:
-            results.append(r.name)
-        data = json.dumps(results)
-    else:
-        data = 'fail'
-    mimetype = 'application/json'
-    return HttpResponse(data, mimetype)
+
 
