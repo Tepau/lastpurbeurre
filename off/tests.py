@@ -133,6 +133,18 @@ class MyProductsPageTestCase(TestCase):
         self.assertEqual(response.status_code, 302)
 
 
+class AjaxTestCase(TestCase):
+    def setUp(self):
+        self.product_a = Product.objects.create(nutriscore="a", name='test_a', url_image='image_a', url_link='url_a')
+        self.product_b = Product.objects.create(nutriscore="b", name='test_b', url_image='image_b', url_link='url_b')
+        self.product_c = Product.objects.create(nutriscore="b", name='produit_c', url_image='image_c', url_link='url_c')
+        self.client = Client()
 
+    def test_ajax_view(self):
+        response = self.client.get('/off/ajax_calls/myFunction/?term=te',  HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "test_a")
+        self.assertContains(response, "test_b")
+        self.assertNotContains(response, "produit_c")
 
 
